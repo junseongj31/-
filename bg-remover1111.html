@@ -1,0 +1,543 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>배경 제거 스튜디오</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg: #fafafa;
+    --surface: #ffffff;
+    --border: #e4e4e7;
+    --border-strong: #d4d4d8;
+    --ink: #18181b;
+    --ink-soft: #52525b;
+    --muted: #a1a1aa;
+    --accent: #0b8793;
+    --accent-soft: #e3f3f4;
+    --danger: #b3261e;
+    --danger-soft: #fbeceb;
+    --radius: 14px;
+    --shadow: 0 1px 2px rgba(24,24,27,0.04), 0 8px 24px rgba(24,24,27,0.05);
+  }
+  *{ box-sizing: border-box; }
+  html, body{ height: 100%; }
+  body{
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, .brand{ font-family: 'Manrope', 'Inter', sans-serif; }
+
+  :focus-visible{
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .page{
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  header{
+    width: 100%;
+    max-width: 980px;
+    padding: 28px 20px 8px;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+  .brand{
+    font-size: 19px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+  .brand-sub{
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  main{
+    width: 100%;
+    max-width: 980px;
+    padding: 24px 20px 64px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 22px;
+  }
+
+  .intro{
+    text-align: center;
+    max-width: 520px;
+    margin-bottom: 4px;
+  }
+  .intro h1{
+    font-size: 26px;
+    font-weight: 800;
+    margin: 0 0 8px;
+    letter-spacing: -0.015em;
+  }
+  .intro p{
+    margin: 0;
+    color: var(--ink-soft);
+    font-size: 15px;
+    line-height: 1.55;
+  }
+
+  /* ---------- Dropzone ---------- */
+  .dropzone{
+    width: 100%;
+    max-width: 560px;
+    background: var(--surface);
+    border: 2px dashed var(--border-strong);
+    border-radius: var(--radius);
+    padding: 56px 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    transition: border-color .15s ease, background-color .15s ease;
+  }
+  .dropzone:hover{ border-color: var(--accent); }
+  .dropzone.drag-over{
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .dropzone .icon{
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    background: var(--accent-soft);
+    color: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .dropzone .headline{
+    font-size: 16px;
+    font-weight: 600;
+    text-align: center;
+  }
+  .dropzone .sub{
+    font-size: 13.5px;
+    color: var(--muted);
+    text-align: center;
+  }
+  .visually-hidden-input{
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden;
+    clip: rect(0,0,0,0);
+    white-space: nowrap;
+    border: 0;
+  }
+  .visually-hidden-input:focus-visible + .headline,
+  .dropzone:focus-within{
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .error-banner{
+    width: 100%;
+    max-width: 560px;
+    background: var(--danger-soft);
+    color: var(--danger);
+    border: 1px solid #f3cfcc;
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 13.5px;
+    line-height: 1.5;
+  }
+
+  /* ---------- Processing ---------- */
+  .process-card{
+    width: 100%;
+    max-width: 560px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 48px 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+  .spinner{
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    animation: spin 0.9s linear infinite;
+  }
+  @keyframes spin{ to{ transform: rotate(360deg); } }
+  .process-status{ font-size: 15px; font-weight: 600; }
+  .process-detail{ font-size: 13px; color: var(--muted); }
+  .progress-track{
+    width: 100%;
+    max-width: 320px;
+    height: 6px;
+    border-radius: 999px;
+    background: var(--border);
+    overflow: hidden;
+  }
+  .progress-fill{
+    height: 100%;
+    background: var(--accent);
+    border-radius: 999px;
+    width: 4%;
+    transition: width .25s ease;
+  }
+
+  /* ---------- Result ---------- */
+  .workspace{
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    align-items: center;
+    opacity: 0;
+    animation: rise .4s ease forwards;
+  }
+  @keyframes rise{
+    from{ opacity: 0; transform: translateY(8px); }
+    to{ opacity: 1; transform: translateY(0); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .workspace{ animation: none; opacity: 1; }
+  }
+
+  .panels{
+    width: 100%;
+    display: flex;
+    gap: 18px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .panel{
+    flex: 1 1 320px;
+    max-width: 440px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .panel-label{
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .panel-frame{
+    aspect-ratio: 4 / 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 14px;
+  }
+  .panel-frame img{
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+  .checker{
+    background-image:
+      linear-gradient(45deg, #e9e9ec 25%, transparent 25%),
+      linear-gradient(-45deg, #e9e9ec 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #e9e9ec 75%),
+      linear-gradient(-45deg, transparent 75%, #e9e9ec 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+    background-color: #f7f7f8;
+  }
+
+  .actions{
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  button{
+    font-family: inherit;
+    font-size: 14.5px;
+    font-weight: 600;
+    border-radius: 10px;
+    padding: 13px 22px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: transform .05s ease, opacity .15s ease, background-color .15s ease;
+  }
+  button:active{ transform: scale(0.98); }
+  .btn-primary{
+    background: var(--ink);
+    color: #fff;
+  }
+  .btn-primary:hover{ opacity: 0.88; }
+  .btn-secondary{
+    background: var(--surface);
+    color: var(--ink);
+    border-color: var(--border-strong);
+  }
+  .btn-secondary:hover{ background: #f4f4f5; }
+
+  .hidden{ display: none !important; }
+
+  footer{
+    padding: 8px 20px 32px;
+    font-size: 12.5px;
+    color: var(--muted);
+    text-align: center;
+    max-width: 560px;
+  }
+
+  @media (max-width: 480px){
+    .dropzone{ padding: 40px 18px; }
+    .process-card{ padding: 36px 18px; }
+    .intro h1{ font-size: 22px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <span class="brand">배경 제거 스튜디오</span>
+    <span class="brand-sub">사진 속 대상만 남기고 배경을 지워요</span>
+  </header>
+
+  <main>
+    <div class="intro" id="intro">
+      <h1>사진의 배경을 자동으로 제거해요</h1>
+      <p>사람, 동물, 물건을 인식해서 배경만 투명하게 지워드려요. 모든 처리는 브라우저 안에서 이뤄지고, 사진은 서버로 전송되지 않아요.</p>
+    </div>
+
+    <div id="error-banner" class="error-banner hidden"></div>
+
+    <!-- Upload -->
+    <label id="dropzone" class="dropzone" for="file-input">
+      <div class="icon" aria-hidden="true">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path d="M12 16V4M12 4L7 9M12 4L17 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M4 16V18C4 19.1046 4.89543 20 6 20H18C19.1046 20 20 19.1046 20 18V16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="headline">사진을 여기에 끌어놓거나 클릭해서 업로드하세요</div>
+      <div class="sub">JPG, JPEG, PNG, WEBP 파일을 지원해요</div>
+      <input type="file" id="file-input" class="visually-hidden-input" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" />
+    </label>
+
+    <!-- Processing -->
+    <div id="process-card" class="process-card hidden">
+      <div class="spinner" aria-hidden="true"></div>
+      <div class="process-status" id="process-status">배경 제거 중...</div>
+      <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+      <div class="process-detail" id="process-detail">잠시만 기다려 주세요</div>
+    </div>
+
+    <!-- Result -->
+    <div id="workspace" class="workspace hidden">
+      <div class="panels">
+        <div class="panel">
+          <div class="panel-label">원본</div>
+          <div class="panel-frame">
+            <img id="original-img" alt="원본 사진" />
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-label">배경 제거됨</div>
+          <div class="panel-frame checker">
+            <img id="result-img" alt="배경이 제거된 사진" />
+          </div>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn-secondary" id="reset-btn">다시 선택하기</button>
+        <button class="btn-primary" id="download-btn">PNG로 저장하기</button>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    배경 제거는 IMG.LY의 오픈소스 라이브러리(@imgly/background-removal)와 ISNet 세그멘테이션 모델을 사용해요. 처음 실행할 때 모델을 내려받느라 조금 시간이 걸릴 수 있어요.
+  </footer>
+</div>
+
+<script type="module">
+  import removeBackground from "https://cdn.jsdelivr.net/npm/@imgly/background-removal/+esm";
+
+  const dropzone = document.getElementById('dropzone');
+  const fileInput = document.getElementById('file-input');
+  const introEl = document.getElementById('intro');
+  const errorBanner = document.getElementById('error-banner');
+  const processCard = document.getElementById('process-card');
+  const processStatus = document.getElementById('process-status');
+  const processDetail = document.getElementById('process-detail');
+  const progressFill = document.getElementById('progress-fill');
+  const workspace = document.getElementById('workspace');
+  const originalImg = document.getElementById('original-img');
+  const resultImg = document.getElementById('result-img');
+  const resetBtn = document.getElementById('reset-btn');
+  const downloadBtn = document.getElementById('download-btn');
+
+  const MAX_DIMENSION = 1500; // 큰 사진은 처리 전 자동으로 이 크기 이내로 축소
+  const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+
+  let currentResultUrl = null;
+  let currentOriginalUrl = null;
+
+  function showError(message){
+    errorBanner.textContent = message;
+    errorBanner.classList.remove('hidden');
+  }
+  function clearError(){
+    errorBanner.classList.add('hidden');
+    errorBanner.textContent = '';
+  }
+
+  function setView(view){
+    // view: 'upload' | 'processing' | 'result'
+    introEl.classList.toggle('hidden', view !== 'upload');
+    dropzone.classList.toggle('hidden', view !== 'upload');
+    processCard.classList.toggle('hidden', view !== 'processing');
+    workspace.classList.toggle('hidden', view !== 'result');
+  }
+
+  function isAcceptedFile(file){
+    if (ACCEPTED_TYPES.includes(file.type)) return true;
+    // 일부 브라우저는 webp의 MIME 타입을 비워서 전달하므로 확장자로도 확인
+    return /\.(jpe?g|png|webp)$/i.test(file.name);
+  }
+
+  // 큰 이미지를 캔버스에 그려 축소하고, 이후 단계에서 원본/결과 사진의 스케일을 맞춤
+  function resizeImage(file){
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const objectUrl = URL.createObjectURL(file);
+      img.onload = () => {
+        let { width, height } = img;
+        const longSide = Math.max(width, height);
+        if (longSide > MAX_DIMENSION) {
+          const scale = MAX_DIMENSION / longSide;
+          width = Math.round(width * scale);
+          height = Math.round(height * scale);
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        URL.revokeObjectURL(objectUrl);
+        canvas.toBlob((blob) => {
+          if (!blob) { reject(new Error('이미지를 처리할 수 없어요.')); return; }
+          resolve({ blob, dataUrl: canvas.toDataURL('image/png') });
+        }, 'image/png');
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        reject(new Error('이미지를 읽을 수 없어요. 다른 파일을 시도해 주세요.'));
+      };
+      img.src = objectUrl;
+    });
+  }
+
+  async function handleFile(file){
+    clearError();
+    if (!isAcceptedFile(file)) {
+      showError('JPG, JPEG, PNG, WEBP 파일만 업로드할 수 있어요.');
+      return;
+    }
+
+    setView('processing');
+    processStatus.textContent = '사진을 준비하는 중...';
+    processDetail.textContent = '큰 사진은 자동으로 크기를 줄이고 있어요';
+    progressFill.style.width = '6%';
+
+    try {
+      const { blob, dataUrl } = await resizeImage(file);
+
+      if (currentOriginalUrl) URL.revokeObjectURL(currentOriginalUrl);
+      originalImg.src = dataUrl;
+      currentOriginalUrl = null;
+
+      processStatus.textContent = '배경 제거 중...';
+      processDetail.textContent = '처음 실행 시 모델을 내려받아 시간이 더 걸릴 수 있어요';
+
+      const resultBlob = await removeBackground(blob, {
+        progress: (key, current, total) => {
+          const ratio = total ? current / total : 0;
+          const percent = Math.min(99, Math.round(ratio * 100));
+          progressFill.style.width = percent + '%';
+          if (key && key.toString().toLowerCase().includes('fetch')) {
+            processStatus.textContent = '모델을 불러오는 중...';
+          } else {
+            processStatus.textContent = '배경 제거 중...';
+          }
+          processDetail.textContent = percent + '%';
+        },
+      });
+
+      if (currentResultUrl) URL.revokeObjectURL(currentResultUrl);
+      currentResultUrl = URL.createObjectURL(resultBlob);
+      resultImg.src = currentResultUrl;
+
+      progressFill.style.width = '100%';
+      setView('result');
+    } catch (err) {
+      console.error(err);
+      setView('upload');
+      showError('배경을 제거하는 동안 문제가 생겼어요. 네트워크 상태를 확인하고 다시 시도해 주세요.');
+    }
+  }
+
+  // ---- 업로드 인터랙션 ----
+  // dropzone은 <label for="file-input">이라 클릭/터치/키보드 모두 브라우저가 네이티브로 처리해요.
+  fileInput.addEventListener('change', (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (file) handleFile(file);
+    fileInput.value = '';
+  });
+
+  ['dragenter', 'dragover'].forEach((evt) => {
+    dropzone.addEventListener(evt, (e) => {
+      e.preventDefault();
+      dropzone.classList.add('drag-over');
+    });
+  });
+  ['dragleave', 'drop'].forEach((evt) => {
+    dropzone.addEventListener(evt, (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('drag-over');
+    });
+  });
+  dropzone.addEventListener('drop', (e) => {
+    const file = e.dataTransfer.files && e.dataTransfer.files[0];
+    if (file) handleFile(file);
+  });
+
+  // ---- 결과 화면 액션 ----
+  resetBtn.addEventListener('click', () => {
+    clearError();
+    setView('upload');
+  });
+
+  downloadBtn.addEventListener('click', () => {
+    if (!currentResultUrl) return;
+    const a = document.createElement('a');
+    a.href = currentResultUrl;
+    a.download = 'background-removed.png';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  });
+</script>
+</body>
+</html>
